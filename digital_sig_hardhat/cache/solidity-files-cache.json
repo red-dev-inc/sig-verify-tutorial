@@ -72,8 +72,8 @@
       ]
     },
     "/home/nimba/Documents/Aratrika/digital_sig_hardhat/contracts/EC.sol": {
-      "lastModificationDate": 1627468364765,
-      "contentHash": "5911b868f874d29534da8268af0cf9ec",
+      "lastModificationDate": 1628256041982,
+      "contentHash": "3db04990d726fc71be2d4ae452f8fe7a",
       "sourceName": "contracts/EC.sol",
       "solcConfig": {
         "version": "0.7.0",

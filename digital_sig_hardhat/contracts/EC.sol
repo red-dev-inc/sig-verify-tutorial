@@ -347,14 +347,14 @@ contract EC {
     /**
      * @dev Validate combination of message, signature, and public key.
      */
-    function validateSignature(bytes32 message, uint[2] memory rs, uint[2] memory Q) public view
+    function validateSignature(bytes32 messageHash, uint[2] memory rs, uint[2] memory publicKey) public view
         returns (bool)
     {
         // To disambiguate between public key solutions, include comment below.
         if(rs[0] == 0 || rs[0] >= n || rs[1] == 0 || rs[1] > lowSmax) {
             return false;
         }
-        if (!isOnCurve(Q[0], Q[1])) {
+        if (!isOnCurve(publicKey[0], publicKey[1])) {
             return false;
         }
 
@@ -364,8 +364,8 @@ contract EC {
         uint y2;
 
         uint sInv = inverseMod(rs[1], n);
-        (x1, y1) = multiplyScalar(gx, gy, mulmod(uint(message), sInv, n));
-        (x2, y2) = multiplyScalar(Q[0], Q[1], mulmod(rs[0], sInv, n));
+        (x1, y1) = multiplyScalar(gx, gy, mulmod(uint(messageHash), sInv, n));
+        (x2, y2) = multiplyScalar(publicKey[0], publicKey[1], mulmod(rs[0], sInv, n));
         uint[3] memory P = addAndReturnProjectivePoint(x1, y1, x2, y2);
 
         if (P[2] == 0) {
@@ -383,7 +383,7 @@ contract EC {
      * @dev Recover x-chain address from the signature and message
      */
 
-    function recoverAddress(string memory xchain, string memory prefix, uint[] memory hrp, bytes memory pubk, bytes32 message, uint[2] memory rs, uint[2] memory Q, string memory mg) public view
+    function recoverAddress(bytes32 messageHash, uint[2] memory rs, uint[2] memory publicKey, bytes memory pubk, string memory xchain, string memory prefix, uint[] memory hrp) public view
     returns(string memory)
     {
         bool signVerification = false;
@@ -397,7 +397,7 @@ contract EC {
         bytes memory pre = bytes(prefix);
         string memory xc = encode(pre, hrp, convert(rp, 8, 5));
         if(keccak256(abi.encodePacked(xc)) == keccak256(abi.encodePacked(xchain))) {
-            signVerification = validateSignature(message, rs, Q);
+            signVerification = validateSignature(messageHash, rs, publicKey);
             if(signVerification == true) {
                 msgrply = "Signature verified!";
             }

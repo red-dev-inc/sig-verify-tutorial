@@ -119,52 +119,61 @@ export default {
     //Split the signature into r,s and v parameters
     splitSig() {
       try{
-        // let sign = this.sig
         let bintools = BinTools.getInstance()
         let decodedSig = bintools.cb58Decode(this.sig)      //Decode the signature as Avalanche Wallet produces cb58 encoded signature
-        let sigHex = decodedSig.toString('hex')     //convert decode signature buffer to hex
         const r = new BN(bintools.copyFrom(decodedSig, 0, 32))     //split first 32 bytes to r
         const s = new BN(bintools.copyFrom(decodedSig, 32, 64))    //split next 32 bytes to s
         const v = bintools.copyFrom(decodedSig, 64, 65).readUIntBE(0, 1)     //split last 1 byte to v
-        const sigOpt = {
+        const sigParam = {
           r: r,
           s: s,
           v: v
         }
-        var rhex = '0x' + sigHex.slice(0, 64)     //converts r to hex
-        var shex = '0x' + sigHex.slice(64, 128)   //converts s to hex
-        let signature = [rhex, shex]
-        return {sigOpt, signature}
+        let rhex = '0x' + r.toString('hex')     //converts r to hex
+        let shex = '0x' + s.toString('hex')   //converts s to hex
+        let sigHex = [rhex, shex]
+        return {sigParam, sigHex}
       }
       catch{
         this.result = "Failed: Invalid signature."
       }
     },
 
+    //Recover public key
+    recover(msg, sig) {
+      let ec = new EC('secp256k1')
+      const pubk = ec.recoverPubKey(msg, sig, sig.v)
+      const pubkx = '0x' + pubk.x.toString('hex')     //public key x coordinate
+      const pubky = '0x' + pubk.y.toString('hex')     //public key y coordinate
+      let pubkCord = [pubkx, pubky]
+      let pubkBuff = Buffer.from(pubk.encodeCompressed())
+      return {pubkCord, pubkBuff}
+    },
+
     // Verify the signature and get the signer address from Dapp
     async verify() {
-      let ec = new EC('secp256k1')
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       const elliptic = new ethers.Contract(contractAddress.Contract, ECArtifact.abi, provider)
-      let xc = this.checkXc()
-      if (xc) {
-        let message = this.hashMessage()
-        let sigs = this.splitSig()
-
-        // Recover Public key from the signature and message
-        const pubk = ec.recoverPubKey(message.hashBuff, sigs.sigOpt, sigs.sigOpt.v)
-        const pubkx = '0x' + pubk.x.toString('hex')     //public key x coordinate
-        const pubky = '0x' + pubk.y.toString('hex')     //public key y coordinate
-        let publicKey = [pubkx, pubky]
-        let pubk1 = Buffer.from(pubk.encodeCompressed())
-        
-        var prefix = "fuji"
-        var hrp = [102, 117, 106, 105]    //array of unicode of prefix
-        const tx = await elliptic.recoverAddress(this.xchain, prefix, hrp, pubk1, message.messageHash, sigs.signature, publicKey, this.msg)
-        this.result = tx
+      if(this.xc == '' || this.msg == '' || this.sig == '') {
+        this.result = "Signature Verification Failed"
       }
-      else{
-        this.result = "Halted: X-Chain address must be for the Avalanche Fuji Testnet."
+      else {
+        let xc = this.checkXc()
+        if (xc) {
+          let message = this.hashMessage()
+          let sign = this.splitSig()
+          let publicKey = this.recover(message.hashBuff, sign.sigParam)
+          let prefix = "fuji"
+          let hrp = []    //array of unicode of prefix
+          for (var i=0; i<prefix.length; i++) {
+            hrp[i] = prefix.charCodeAt(i)
+          }
+          const tx = await elliptic.recoverAddress(message.messageHash, sign.sigHex, publicKey.pubkCord, publicKey.pubkBuff, this.xchain, prefix, hrp)
+          this.result = tx
+        }
+        else{
+          this.result = "Halted: X-Chain address must be for the Avalanche Fuji Testnet."
+        }
       }
     },
 
