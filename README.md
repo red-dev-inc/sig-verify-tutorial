@@ -331,12 +331,12 @@ function validateSignature(bytes32 messageHash, uint[2] memory rs, uint[2] memor
 * rs — r and s value of the signature
 * publicKey — x and y coordinates of the public key
 ### Finishing up
-After performing these tests, the dApp returns its decision whether the signature is valid or not to the webapp, and the webapp then be responsible for showing the final output to the user. As we mentioned above, in your dApp, you will probably want to take further actions accordingly.
+After performing these tests, the dApp returns its decision whether the signature is valid or not to the webapp, and the webapp is then responsible for showing the final output to the user. As we mentioned above, in your dApp, you will probably want to take further actions accordingly.
 
 # Resources
 Here are some resources that can use to teach yourself the subjects you need in order to understand this tutorial.
 
-1. This is a useful documentation from Ava Labs on cryptographic primitives: https://docs.avax.network/build/references/cryptographic-primitive2.
+1. This is a useful documentation from Ava Labs on cryptographic primitives: https://docs.avax.network/build/references/cryptographic-primitives.
 2. Here is a great YouTube video by Connor Daly of Ava Labs on how to use Hardhat to deploy and run your smart contract on Avalanche network: https://www.youtube.com/watch?v=UdzHxdfMKkE&t=1812s 
 3. If you want to learn more on how the private/public keys and the wallets work, you may enjoy going through this awesome tutorial by Greg Walker: https://learnmeabitcoin.com/technical/
 4. Andrea Corbellini has done great work explaining Elliptic Curve Cryptography in detail in her blog post: https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/
